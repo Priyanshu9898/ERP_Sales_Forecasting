@@ -1,4 +1,4 @@
-from ERPsalesForecasting.entity import DataIngestionConfig
+from ERPsalesForecasting.entity import DataIngestionConfig, DataProcessingConfig
 from ERPsalesForecasting.constants import *
 from ERPsalesForecasting.utils.common import read_yaml, create_directories
 
@@ -22,3 +22,17 @@ class ConfigurationManager:
         )
 
         return data_ingestion_config
+
+    def get_data_processing_config(self):
+        config = self.config.data_processing
+
+        create_directories([config.root_dir])
+
+        data_processing_config = DataProcessingConfig(
+            root_dir=config.root_dir,
+            data_file=config.data_file,
+            preprocessed_file=config.preprocessed_file,
+            isValid=False,
+        )
+
+        return data_processing_config
