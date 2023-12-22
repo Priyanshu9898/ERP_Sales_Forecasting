@@ -21,7 +21,7 @@
 Clone the repository
 
 ```bash
-git clone https://github.com/Prriyanshu9898/ERP_Sales_Forecasting.git
+git clone https://github.com/Priyanshu9898/ERP_Sales_Forecasting.git
 ```
 ### STEP 01- Create a Python environment after opening the repository
 
