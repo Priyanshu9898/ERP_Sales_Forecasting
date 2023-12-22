@@ -11,7 +11,7 @@ data_validation:
 
 data_processing:
   root_dir: artifacts/data_processing
-  data_file: artifacts/data_ingestion/data.csv
+  data_file: artifacts/data_ingestion/data.xlsx
   preprocessed_file: artifacts/data_processing/finalPreprocessed.csv
 
 model_training:
