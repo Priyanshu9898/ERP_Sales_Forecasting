@@ -42,14 +42,17 @@ class ConfigurationManager:
     def get_model_training_config(self):
         config = self.config.model_training
         validationConfig = self.config.model_validation
+        bestModelConfig = self.config.best_model
 
-        create_directories([config.root_dir, validationConfig.root_dir])
+        create_directories(
+            [config.root_dir, validationConfig.root_dir, bestModelConfig.root_dir])
         column_names = "ModelName,MSE,MAE,R2\n"
         if (not os.path.exists(validationConfig.result_file) or os.path.getsize(validationConfig.result_file) == 0):
-         with open(validationConfig.result_file, "w") as f:
-            f.write(column_names)
-            logger.info(f"Creating empty file: {validationConfig.result_file}")
-            
+            with open(validationConfig.result_file, "w") as f:
+                f.write(column_names)
+                logger.info(
+                    f"Creating empty file: {validationConfig.result_file}")
+
         else:
             logger.info(f"{validationConfig.result_file} is already exists")
 
@@ -57,6 +60,7 @@ class ConfigurationManager:
             root_dir=config.root_dir,
             data_file=config.data_file,
             result_file=validationConfig.result_file,
+            model_path=bestModelConfig.model_path,
         )
 
         return model_training_config

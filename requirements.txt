@@ -16,4 +16,5 @@ ensure
 notebook
 dvc
 openpyxl
+dill
 -e .

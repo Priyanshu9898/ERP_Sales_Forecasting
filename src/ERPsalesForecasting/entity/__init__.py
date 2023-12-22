@@ -22,3 +22,4 @@ class ModelTrainingConfig:
     root_dir: Path
     data_file: Path
     result_file: Path
+    model_path: Path

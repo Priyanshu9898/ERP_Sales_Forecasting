@@ -1,7 +1,7 @@
 from ERPsalesForecasting.config.configuration import ConfigurationManager
 from ERPsalesForecasting.components.model_training import ModelTraining
 from ERPsalesForecasting import logger
-
+import dill
 
 STAGE_NAME = "Model Training and Validation stage"
 
@@ -36,24 +36,36 @@ class ModelTrainingPipeline:
         X_train_scaled, X_test_scaled = model_training.dataScaling(
             X_train, X_test)
 
-        train(model_training, X_train_scaled, y_train, X_test_scaled,
-              y_test, dates_test, product_ids_test, "linear_regression")
-        train(model_training, X_train_scaled, y_train, X_test_scaled,
-              y_test, dates_test, product_ids_test, "decision_tree")
-        train(model_training, X_train_scaled, y_train, X_test_scaled,
-              y_test, dates_test, product_ids_test, "svr")
-        train(model_training, X_train_scaled, y_train, X_test_scaled,
-              y_test, dates_test, product_ids_test, "knn")
-        train(model_training, X_train_scaled, y_train, X_test_scaled,
-              y_test, dates_test, product_ids_test, "gradient_boosting")
-        train(model_training, X_train_scaled, y_train, X_test_scaled,
-              y_test, dates_test, product_ids_test, "random_forest")
-        train(model_training, X_train_scaled, y_train, X_test_scaled,
-              y_test, dates_test, product_ids_test, "ridge")
-        train(model_training, X_train_scaled, y_train, X_test_scaled,
-              y_test, dates_test, product_ids_test, "lasso")
-        train(model_training, X_train_scaled, y_train, X_test_scaled,
-              y_test, dates_test, product_ids_test, "elastic_net")
+        models = {}
+
+        # Train each model and store it in the dictionary
+        models["linear_regression"] = train(model_training, X_train_scaled, y_train,
+                                            X_test_scaled, y_test, dates_test, product_ids_test, "linear_regression")
+        models["decision_tree"] = train(model_training, X_train_scaled, y_train,
+                                        X_test_scaled, y_test, dates_test, product_ids_test, "decision_tree")
+        models["svr"] = train(model_training, X_train_scaled, y_train,
+                              X_test_scaled, y_test, dates_test, product_ids_test, "svr")
+        models["knn"] = train(model_training, X_train_scaled, y_train,
+                              X_test_scaled, y_test, dates_test, product_ids_test, "knn")
+        models["gradient_boosting"] = train(model_training, X_train_scaled, y_train,
+                                            X_test_scaled, y_test, dates_test, product_ids_test, "gradient_boosting")
+        models["random_forest"] = train(model_training, X_train_scaled, y_train,
+                                        X_test_scaled, y_test, dates_test, product_ids_test, "random_forest")
+        models["ridge"] = train(model_training, X_train_scaled, y_train,
+                                X_test_scaled, y_test, dates_test, product_ids_test, "ridge")
+        models["lasso"] = train(model_training, X_train_scaled, y_train,
+                                X_test_scaled, y_test, dates_test, product_ids_test, "lasso")
+        models["elastic_net"] = train(model_training, X_train_scaled, y_train,
+                                      X_test_scaled, y_test, dates_test, product_ids_test, "elastic_net")
+
+        best_model_name = model_training.best_model()
+
+        print(best_model_name)
+
+        with open('best_model/model.dill', 'wb') as file:
+            dill.dump(models[best_model_name], file)
+
+        logger.info(f"{best_model_name} model saved in .dill format.")
 
 
 if __name__ == '__main__':

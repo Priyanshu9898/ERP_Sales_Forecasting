@@ -22,3 +22,6 @@ model_validation:
   root_dir: artifacts/model_validation
   result_file: artifacts/model_validation/result.csv
   
+best_model:
+  root_dir: best_model
+  model_path: best_model/model.dill

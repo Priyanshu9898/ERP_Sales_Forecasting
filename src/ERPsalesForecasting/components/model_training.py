@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from ERPsalesForecasting.entity import ModelTrainingConfig
 
+
 class ModelTraining:
     def __init__(self, config: ModelTrainingConfig) -> None:
         self.config = config
@@ -72,6 +73,7 @@ class ModelTraining:
         elif model_type == 'svr':
             return SVR()
         elif model_type == 'linear_regression':
+            from sklearn.linear_model import LinearRegression
             return LinearRegression()
 
     def model_evaluation(self, model, model_name, X_test_scaled, y_test, dates_test, product_ids_test):
@@ -86,47 +88,25 @@ class ModelTraining:
 
         logger.info(
             'Model: {model_name}, MSE: {mse}, MAE: {mae}, R2 Score: {r2}')
-        
-        # Read the existing data and modify it
-        updated_rows = []
-        row_found = False
-        with open(self.config.result_file, 'r', newline='') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                if row[0] == model_name:
-                    # Replace the existing row with the new data
-                    updated_rows.append([model_name, mse, mae, r2])
-                    row_found = True
-                else:
-                    updated_rows.append(row)
-
-        # Append the new row if the model name was not found
-        if not row_found:
-            updated_rows.append([model_name, mse, mae, r2])
-
-        # Write the updated data back to the CSV file
-        with open(self.config.result_file, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerows(updated_rows)
 
         # Your code for updating the DataFrame
-        # new_data = pd.DataFrame({
-        #     'ModelName': [model_name],
-        #     'MSE': [mse],
-        #     'MAE': [mae],
-        #     'R2': [r2]
-        # })
+        new_data = pd.DataFrame({
+            'ModelName': [model_name],
+            'MSE': [mse],
+            'MAE': [mae],
+            'R2': [r2]
+        })
 
-        # new_row = [model_name, mse, mae, r2]
+        new_row = [model_name, mse, mae, r2]
 
-        # result_df = pd.read_csv(self.config.result_file)
+        result_df = pd.read_csv(self.config.result_file)
 
-        # if result_df['ModelName'].isin([model_name]).any():
-        #     result_df.loc[result_df['ModelName'] == model_name,
-        #                   ['MSE', 'MAE', 'R2']] = [mse, mae, r2]
+        if result_df['ModelName'].isin([model_name]).any():
+            result_df.loc[result_df['ModelName'] == model_name,
+                          ['MSE', 'MAE', 'R2']] = [mse, mae, r2]
 
-        # else:
-        #     result_df = result_df.append(new_data, ignore_index=True)
+        else:
+            result_df = result_df.append(new_data, ignore_index=True)
 
         # with open(self.config.result_file, 'a', newline='') as file:
         #     writer = csv.writer(file)
@@ -152,3 +132,18 @@ class ModelTraining:
 
         logger.info(
             f'test result of {model_name} is saved to: {self.config.root_dir}/{model_name}.csv')
+
+    def best_model(self):
+
+        df = pd.read_csv(self.config.result_file)
+        sorted_data = df.sort_values(by=['MSE', 'MAE'])
+
+        # Get the top model (lowest MSE and MAE)
+        best_model = sorted_data.iloc[0]
+
+        print("Best model based on lowest MSE and MAE:")
+        print(best_model['ModelName'])
+
+        logger.info(f"{best_model['ModelName']} is the best model")
+
+        return best_model['ModelName']
