@@ -1,6 +1,8 @@
-from ERPsalesForecasting.entity import DataIngestionConfig, DataProcessingConfig
+from ERPsalesForecasting.entity import DataIngestionConfig, DataProcessingConfig, ModelTrainingConfig
 from ERPsalesForecasting.constants import *
 from ERPsalesForecasting.utils.common import read_yaml, create_directories
+import os
+from ERPsalesForecasting import logger
 
 
 class ConfigurationManager:
@@ -36,3 +38,25 @@ class ConfigurationManager:
         )
 
         return data_processing_config
+
+    def get_model_training_config(self):
+        config = self.config.model_training
+        validationConfig = self.config.model_validation
+
+        create_directories([config.root_dir, validationConfig.root_dir])
+        column_names = "ModelName,MSE,MAE,R2\n"
+        if (not os.path.exists(validationConfig.result_file) or os.path.getsize(validationConfig.result_file) == 0):
+         with open(validationConfig.result_file, "w") as f:
+            f.write(column_names)
+            logger.info(f"Creating empty file: {validationConfig.result_file}")
+            
+        else:
+            logger.info(f"{validationConfig.result_file} is already exists")
+
+        model_training_config = ModelTrainingConfig(
+            root_dir=config.root_dir,
+            data_file=config.data_file,
+            result_file=validationConfig.result_file,
+        )
+
+        return model_training_config

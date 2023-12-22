@@ -16,7 +16,7 @@ class DataProcessing:
         dataFilePath = Path(self.config.data_file)
 
         try:
-            df = pd.read_csv(dataFilePath)
+            df = pd.read_excel(dataFilePath)
 
             if (get_size(dataFilePath) != ""):
                 logger.info(f"Dataset is available at: {dataFilePath}")
@@ -26,19 +26,18 @@ class DataProcessing:
         except Exception as e:
             raise e
 
-    
-
     def prepare_data(self) -> None:
 
         create_directories([self.config.root_dir])
 
         try:
             if (self.config.isValid):
-                df = pd.read_csv(self.config.data_file)
+                df = pd.read_excel(self.config.data_file)
                 columns = df.columns
-                # print(columns)
+                print(columns)
 
-                df['Date'] = pd.to_datetime(df['Date'], dayfirst = True)
+                df['Date'] = pd.to_datetime(
+                    df['billCreatedDateTime'], dayfirst=True)
                 df.sort_values('Date', inplace=True)
 
                 df.reset_index(inplace=True)
@@ -52,7 +51,8 @@ class DataProcessing:
                 df[date_column] = pd.to_datetime(df[date_column]).dt.date
 
                 # Calculate the cumulative quantity sold for each product
-                df['CumulativeSelledQTY'] = df.groupby([product_id_column])[quantity_sold_column].cumsum()
+                df['CumulativeSelledQTY'] = df.groupby([product_id_column])[
+                    quantity_sold_column].cumsum()
 
                 # Group by ProductID and Date, and calculate required fields
                 merged_data = df.groupby([product_id_column, date_column]).agg({
@@ -63,7 +63,8 @@ class DataProcessing:
                 }).reset_index()
 
                 # Calculate AvailableQtyAfterSell
-                merged_data['AvailableQtyAfterSell'] = merged_data[total_qty_column] - merged_data['CumulativeSelledQTY']
+                merged_data['AvailableQtyAfterSell'] = merged_data[total_qty_column] - \
+                    merged_data['CumulativeSelledQTY']
 
                 # Drop the CumulativeSelledQTY column
                 merged_data.drop(columns=['CumulativeSelledQTY'], inplace=True)
