@@ -15,4 +15,5 @@ tqdm
 ensure
 notebook
 dvc
+openpyxl
 -e .

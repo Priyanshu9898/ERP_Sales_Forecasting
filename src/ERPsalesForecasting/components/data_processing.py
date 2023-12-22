@@ -26,6 +26,8 @@ class DataProcessing:
         except Exception as e:
             raise e
 
+    
+
     def prepare_data(self) -> None:
 
         create_directories([self.config.root_dir])
@@ -34,17 +36,43 @@ class DataProcessing:
             if (self.config.isValid):
                 df = pd.read_csv(self.config.data_file)
                 columns = df.columns
-                print(columns)
+                # print(columns)
 
-                df['Date'] = pd.to_datetime(df['Date'])
+                df['Date'] = pd.to_datetime(df['Date'], dayfirst = True)
                 df.sort_values('Date', inplace=True)
 
                 df.reset_index(inplace=True)
 
-                df.to_csv(self.config.preprocessed_file)
+                product_id_column = 'ProductID'
+                date_column = 'Date'
+                quantity_sold_column = 'SelledQTY'
+                product_name_column = 'ProductName'
+                total_qty_column = 'ProductTotalQty'
+
+                df[date_column] = pd.to_datetime(df[date_column]).dt.date
+
+                # Calculate the cumulative quantity sold for each product
+                df['CumulativeSelledQTY'] = df.groupby([product_id_column])[quantity_sold_column].cumsum()
+
+                # Group by ProductID and Date, and calculate required fields
+                merged_data = df.groupby([product_id_column, date_column]).agg({
+                    product_name_column: 'first',
+                    total_qty_column: 'max',
+                    quantity_sold_column: 'sum',
+                    'CumulativeSelledQTY': 'max'
+                }).reset_index()
+
+                # Calculate AvailableQtyAfterSell
+                merged_data['AvailableQtyAfterSell'] = merged_data[total_qty_column] - merged_data['CumulativeSelledQTY']
+
+                # Drop the CumulativeSelledQTY column
+                merged_data.drop(columns=['CumulativeSelledQTY'], inplace=True)
+
+                # Save file
+                merged_data.to_csv(self.config.preprocessed_file, index=False)
 
                 logger.info(
-                    f"Preprocessed file saved at {self.config.preprocessed_file}")
+                    f"Preprocessed sales file saved at {self.config.preprocessed_file}")
 
             else:
                 logger.info("Data is not available")
