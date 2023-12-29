@@ -43,3 +43,9 @@ python -m venv env
 pip install -r requirements.txt
 ```
 
+### STEP 03- Run whole Train pipeline
+```bash
+python main.py
+```
+
+
