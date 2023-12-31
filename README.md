@@ -43,3 +43,8 @@ python -m venv env
 pip install -r requirements.txt
 ```
 
+### STEP 03- Run the code
+```bash
+python main.py
+```
+

@@ -1,24 +1,36 @@
-from ERPsalesForecasting.entity import DataIngestionConfig
+from azure.storage.blob import BlobServiceClient
+import pandas as pd
 import os
-import gdown
 from ERPsalesForecasting import logger
 
-
 class DataIngestion:
+    def __init__(self, account_name, account_key, container_name, blob_name, download_file_path):
+        self.account_name = account_name
+        self.account_key = account_key
+        self.container_name = container_name
+        self.blob_name = blob_name
+        self.download_file_path = download_file_path
 
-    def __init__(self, config: DataIngestionConfig) -> None:
-        self.config = config
+    def get_connection_string(self):
+        return f"DefaultEndpointsProtocol=https;AccountName={self.account_name};AccountKey={self.account_key};EndpointSuffix=core.windows.net"
 
-    def download_file(self):
+    def download_blob_data(self):
         try:
-            dataset_url = self.config.source_url
-            zip_download_dir = self.config.local_data_file
-            os.makedirs("/artifacts/data_ingestion/", exist_ok=True)
-            file_id = dataset_url.split("/")[-2]
-            prefix = 'https://drive.google.com/uc?/export=download&id='
-            gdown.download(prefix+file_id, zip_download_dir)
-            logger.info(
-                f"Downloaded data from {dataset_url} into file {zip_download_dir}")
-
+            connection_string = self.get_connection_string()
+            blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+            blob_client = blob_service_client.get_blob_client(container=self.container_name, blob=self.blob_name)
+            os.makedirs(os.path.dirname(self.download_file_path), exist_ok=True)
+            with open(self.download_file_path, "wb") as download_file:
+                download_file.write(blob_client.download_blob().readall())
+            logger.info("Blob data downloaded successfully.")
+            return self.download_file_path
         except Exception as e:
-            raise e
+            logger.error(f"Error in downloading blob data: {e}")
+            return None
+
+    def load_sales_data(self):
+        try:
+            return pd.read_excel(self.download_file_path)
+        except Exception as e:
+            logger.error(f"Error in loading sales data: {e}")
+            return None

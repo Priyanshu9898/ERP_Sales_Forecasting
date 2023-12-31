@@ -2,7 +2,6 @@ pandas
 numpy
 matplotlib
 seaborn
-mlflow
 joblib
 types-PyYAML
 scipy
@@ -14,7 +13,10 @@ pyYAML
 tqdm
 ensure
 notebook
-dvc
 openpyxl
 dill
+scikit-learn
+flask-restplus
+flask-restx
+azure-storage-blob
 -e .

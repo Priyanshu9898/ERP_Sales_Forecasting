@@ -1,4 +1,4 @@
-from ERPsalesForecasting.entity import DataIngestionConfig, DataProcessingConfig, ModelTrainingConfig
+from ERPsalesForecasting.entity import DataIngestionConfig
 from ERPsalesForecasting.constants import *
 from ERPsalesForecasting.utils.common import read_yaml, create_directories
 import os
@@ -18,49 +18,10 @@ class ConfigurationManager:
         create_directories([config.root_dir])
 
         data_ingestion_config = DataIngestionConfig(
-            root_dir=config.root_dir,
-            source_url=config.source_url,
-            local_data_file=config.local_data_file,
+            account_name=config.account_name,
+            account_key=config.account_key,
+            container_name=config.container_name,
+            download_file_path=Path(config.download_file_path),
         )
 
         return data_ingestion_config
-
-    def get_data_processing_config(self):
-        config = self.config.data_processing
-
-        create_directories([config.root_dir])
-
-        data_processing_config = DataProcessingConfig(
-            root_dir=config.root_dir,
-            data_file=config.data_file,
-            preprocessed_file=config.preprocessed_file,
-            isValid=False,
-        )
-
-        return data_processing_config
-
-    def get_model_training_config(self):
-        config = self.config.model_training
-        validationConfig = self.config.model_validation
-        bestModelConfig = self.config.best_model
-
-        create_directories(
-            [config.root_dir, validationConfig.root_dir, bestModelConfig.root_dir])
-        column_names = "ModelName,MSE,MAE,R2\n"
-        if (not os.path.exists(validationConfig.result_file) or os.path.getsize(validationConfig.result_file) == 0):
-            with open(validationConfig.result_file, "w") as f:
-                f.write(column_names)
-                logger.info(
-                    f"Creating empty file: {validationConfig.result_file}")
-
-        else:
-            logger.info(f"{validationConfig.result_file} is already exists")
-
-        model_training_config = ModelTrainingConfig(
-            root_dir=config.root_dir,
-            data_file=config.data_file,
-            result_file=validationConfig.result_file,
-            model_path=bestModelConfig.model_path,
-        )
-
-        return model_training_config
