@@ -19,4 +19,5 @@ scikit-learn
 flask-restplus
 flask-restx
 azure-storage-blob
+gunicorn
 -e .
