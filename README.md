@@ -43,16 +43,15 @@ python -m venv env
 pip install -r requirements.txt
 ```
 
-<<<<<<< HEAD
-### STEP 03- Run the code
-=======
 ### STEP 03- Run whole Train pipeline
->>>>>>> d8c872a6d5211ca6e1ecaabcbbf30f09beffcdfb
+
 ```bash
 python main.py
 ```
+### STEP 04- Run Flask Backend
 
-<<<<<<< HEAD
-=======
+```bash
+python application.py
+```
 
->>>>>>> d8c872a6d5211ca6e1ecaabcbbf30f09beffcdfb
+
