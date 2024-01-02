@@ -86,32 +86,43 @@ class SalesForecasting:
             forecast_set = []
             forecast_results = []
 
-            # Store feature columns from training data
-            # This should be set during the training phase.
-            # For example: self.training_feature_columns = X_train.columns
             training_feature_columns = self.training_feature_columns
 
             for product_id, product_name in self.aggregated_data[['ProductID', 'ProductName']].drop_duplicates().values:
-                product_recent_data = self.aggregated_data[self.aggregated_data['ProductID'] == product_id].sort_values(by='billCreatedDateTime', ascending=False)
+                product_sales_data = self.aggregated_data[self.aggregated_data['ProductID'] == product_id]
+                product_recent_data = product_sales_data.sort_values(by='billCreatedDateTime', ascending=False)
+
+                # Calculate current inventory based on total sales
+                total_sales = product_sales_data['SelledQTY'].sum()
+                initial_inventory = product_sales_data['ProductTotalQty'].iloc[0]  # Assuming initial inventory is the first recorded total quantity
+                current_inventory = initial_inventory - total_sales
+
                 if not product_recent_data.empty:
                     prev_day_sales = product_recent_data.iloc[0]['SelledQTY']
-                    last_known_total_qty = product_recent_data.iloc[0]['ProductTotalQty']
-                    cumulative_forecasted_sales = 0
 
-                    for i in range(1, 8):
+                    for i in range(1, 8):  # Daily forecast for next week
                         forecast_date = last_date + timedelta(days=i)
                         forecast_df = pd.DataFrame({'ProductID': [product_id], 'PrevDaySales': [prev_day_sales]})
                         forecast_df_encoded = pd.get_dummies(forecast_df, columns=['ProductID'])
                         forecast_df_encoded = forecast_df_encoded.reindex(columns=training_feature_columns, fill_value=0)
                         forecast_sales = model.predict(forecast_df_encoded)
                         forecasted_sales = np.ceil(forecast_sales[0]).astype(int)
-                        cumulative_forecasted_sales += forecasted_sales
-                        forecast_set.append({'ProductID': product_id, 'ProductName': product_name, 'ForecastDate': forecast_date, 'ForecastedSales': forecasted_sales})
+
+                        inventory_after_sales = current_inventory - forecasted_sales
+                        reorder_status = 1 if inventory_after_sales <= forecasted_sales else 0
+
+                        forecast_set.append({'ProductID': product_id, 'ProductName': product_name, 
+                                             'ForecastDate': forecast_date, 'ForecastedSales': forecasted_sales,
+                                             'CurrentInventory': current_inventory, 'InventoryAfterSales': inventory_after_sales,
+                                             'ReorderStatus': reorder_status})
+
+                        current_inventory = inventory_after_sales
                         prev_day_sales = forecasted_sales
 
-                    final_inventory_qty = last_known_total_qty - cumulative_forecasted_sales
                     weekly_forecast = sum([f['ForecastedSales'] for f in forecast_set if f['ProductID'] == product_id])
-                    forecast_results.append({'ProductID': product_id, 'ProductName': product_name, 'WeeklyForecastedSales': weekly_forecast, 'FinalInventoryQty': final_inventory_qty})
+                    forecast_results.append({'ProductID': product_id, 'ProductName': product_name, 
+                                             'WeeklyForecastedSales': weekly_forecast, 'FinalInventoryQty': current_inventory,
+                                             'ReorderStatus': 1 if current_inventory <= weekly_forecast else 0})
 
             return pd.DataFrame(forecast_set), pd.DataFrame(forecast_results)
         except Exception as e:
@@ -123,8 +134,8 @@ class SalesForecasting:
             daily_forecasts, weekly_forecasts = self.forecast_sales_next_week(
                 self.best_model)
             logger.info("Forecasts generated successfully.")
-            print(daily_forecasts.head())
-            print(weekly_forecasts.head())
+            print(daily_forecasts)
+            print(weekly_forecasts)
         except Exception as e:
             logger.error(f"Error in make_forecasts: {e}")
 
